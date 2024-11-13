@@ -4,12 +4,16 @@ import (
 	"context"
 	"os"
 
+	"github.com/nakiner/go-logger"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
+
+type OtelJSONErrorHandler struct{}
 
 var (
 	otelTracerProvider *sdktrace.TracerProvider
@@ -33,12 +37,20 @@ func OtelTracerProvider() *sdktrace.TracerProvider {
 }
 
 func initTracerProvider(serviceName string, otlpEndpoint string) {
+	otel.SetErrorHandler(&OtelJSONErrorHandler{})
+
+	if otlpEndpoint == "" {
+		otelTracerProvider = sdktrace.NewTracerProvider()
+		return
+	}
+
 	ctx := context.Background()
 
 	exporter, err := otlptracegrpc.New(
 		ctx,
 		otlptracegrpc.WithEndpoint(otlpEndpoint),
 		otlptracegrpc.WithInsecure(),
+		otlptracegrpc.WithCompressor("gzip"),
 	)
 	if err != nil {
 		otelTracerProvider = sdktrace.NewTracerProvider()
@@ -60,4 +72,10 @@ func initTracerProvider(serviceName string, otlpEndpoint string) {
 		sdktrace.WithResource(res),
 		sdktrace.WithSpanProcessor(sdktrace.NewBatchSpanProcessor(exporter)),
 	)
+}
+
+func (h *OtelJSONErrorHandler) Handle(err error) {
+	if err != nil {
+		logger.ErrorKV(context.Background(), "otel err", "err", err)
+	}
 }

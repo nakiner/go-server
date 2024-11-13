@@ -24,7 +24,7 @@ type Config struct {
 	LogLevel                zapcore.Level `envconfig:"LOG_LEVEL" default:"info"`
 	Env                     string        `envconfig:"ENV" default:"local"`
 	ServiceName             string        `envconfig:"SERVICE_NAME" default:"unknown"`
-	OTLPExporterEndpoint    string        `envconfig:"OTEL_EXPORTER_OTLP_ENDPOINT" default:"tempo.monitoring.svc.cluster.local:4317"`
+	OTLPExporterEndpoint    string        `envconfig:"OTEL_EXPORTER_OTLP_ENDPOINT" default:""`
 }
 
 type App struct {
