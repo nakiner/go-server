@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -23,6 +22,9 @@ type Config struct {
 	GracefulShutdownTimeout time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT" default:"15s"`
 	GracefulShutdownDelay   time.Duration `envconfig:"GRACEFUL_SHUTDOWN_DELAY" default:"30s"`
 	LogLevel                zapcore.Level `envconfig:"LOG_LEVEL" default:"info"`
+	Env                     string        `envconfig:"ENV" default:"local"`
+	ServiceName             string        `envconfig:"SERVICE_NAME" default:"unknown"`
+	OTLPExporterEndpoint    string        `envconfig:"OTEL_EXPORTER_OTLP_ENDPOINT" default:"tempo.monitoring.svc.cluster.local:4317"`
 }
 
 type App struct {
@@ -40,7 +42,6 @@ var appLogger = logger.Logger()
 func fromEnv() Config {
 	var cfg Config
 	envconfig.MustProcess("", &cfg)
-	fmt.Println(cfg)
 	return cfg
 }
 
@@ -49,6 +50,8 @@ func New() *App {
 	appCfg := fromEnv()
 	logger.SetLevel(appCfg.LogLevel)
 	app := new(App)
+
+	initTracerProvider(appCfg.ServiceName, appCfg.OTLPExporterEndpoint)
 
 	app.closer = new(closer)
 	app.closer.add(func() error {

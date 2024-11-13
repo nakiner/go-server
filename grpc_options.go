@@ -6,6 +6,7 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/nakiner/go-logger"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -25,4 +26,10 @@ func WithStreamServerRecovery() grpc.StreamServerInterceptor {
 		return status.Errorf(codes.Internal, "panic triggered")
 	})
 	return recovery.StreamServerInterceptor(recoveryHandler)
+}
+
+func WithGrpcTracing() grpc.ServerOption {
+	return grpc.StatsHandler(
+		otelgrpc.NewServerHandler(otelgrpc.WithTracerProvider(OtelTracerProvider())),
+	)
 }
