@@ -11,6 +11,7 @@ import (
 	"github.com/nakiner/go-logger"
 	swaggerui "github.com/nakiner/swagger-ui-go"
 	"github.com/oklog/run"
+	_ "go.uber.org/automaxprocs"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 )
